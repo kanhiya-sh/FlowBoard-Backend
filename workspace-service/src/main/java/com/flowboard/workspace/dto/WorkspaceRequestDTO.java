@@ -13,8 +13,7 @@ public class WorkspaceRequestDTO {
 
     private String description;
 
-    @NotNull(message = "OwnerId is required")
-    private Long ownerId;
+    // ownerId now comes from JWT — removed from request body
 
     @NotNull(message = "Visibility is required")
     private Visibility visibility;

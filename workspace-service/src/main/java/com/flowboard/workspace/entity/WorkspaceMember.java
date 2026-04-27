@@ -29,4 +29,9 @@ public class WorkspaceMember {
 
     @Column(name = "joined_at")
     private LocalDateTime joinedAt;
+
+    @PrePersist
+    public void onCreate() {
+        this.joinedAt = LocalDateTime.now();
+    }
 }
