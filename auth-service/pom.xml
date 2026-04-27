@@ -14,7 +14,7 @@
     <groupId>com.flowboard</groupId>
     <artifactId>auth-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <n>auth-service</n>
+    <name>auth-service</name>
     <description>FlowBoard - Auth Service</description>
 
     <properties>
