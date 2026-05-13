@@ -35,11 +35,15 @@ class LabelServiceTest {
     @InjectMocks private LabelServiceImpl labelService;
 
     private Label testLabel;
+    private UserResponseDTO testUser;
 
     @BeforeEach
     void setUp() {
         testLabel = Label.builder()
                 .labelId(1L).name("Bug").boardId(1L).color("#FF0000").build();
+
+        testUser = new UserResponseDTO();
+        testUser.setUserId(10L);
     }
 
     @Test
@@ -47,6 +51,8 @@ class LabelServiceTest {
         LabelRequestDTO req = new LabelRequestDTO();
         req.setName("Bug"); req.setBoardId(1L); req.setColor("#FF0000");
 
+        when(authServiceClient.getUserByEmail(anyString())).thenReturn(testUser);
+        when(labelRepository.existsByBoardIdAndNameIgnoreCase(1L, "Bug")).thenReturn(false);
         when(labelRepository.save(any(Label.class))).thenReturn(testLabel);
 
         LabelResponseDTO result = labelService.createLabel(req, "user@test.com");
@@ -63,6 +69,7 @@ class LabelServiceTest {
 
     @Test
     void deleteLabel_callsRepository() {
+        when(authServiceClient.getUserByEmail(anyString())).thenReturn(testUser);
         when(labelRepository.findById(1L)).thenReturn(Optional.of(testLabel));
         labelService.deleteLabel(1L, "user@test.com");
         verify(labelRepository).delete(testLabel);
@@ -70,6 +77,7 @@ class LabelServiceTest {
 
     @Test
     void deleteLabel_notFound_throws() {
+        when(authServiceClient.getUserByEmail(anyString())).thenReturn(testUser);
         when(labelRepository.findById(99L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> labelService.deleteLabel(99L, "user@test.com"));
     }

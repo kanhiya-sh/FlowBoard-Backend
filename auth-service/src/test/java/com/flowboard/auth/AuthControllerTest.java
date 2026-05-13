@@ -3,7 +3,9 @@ package com.flowboard.auth;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flowboard.auth.controller.AuthController;
 import com.flowboard.auth.dto.*;
+import com.flowboard.auth.security.CustomUserDetailsService;
 import com.flowboard.auth.service.AuthService;
+import com.flowboard.auth.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -24,6 +26,8 @@ class AuthControllerTest {
 
     @Autowired private MockMvc mockMvc;
     @MockBean  private AuthService authService;
+    @MockBean  private CustomUserDetailsService userDetailsService;
+    @MockBean  private JwtUtil jwtUtil;
     @Autowired private ObjectMapper objectMapper;
 
     @Test

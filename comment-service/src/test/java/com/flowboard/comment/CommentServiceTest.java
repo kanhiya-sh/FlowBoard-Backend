@@ -31,6 +31,8 @@ class CommentServiceTest {
     @InjectMocks private CommentServiceImpl commentService;
 
     private Comment testComment;
+    private UserResponseDTO testUser;
+    private CardResponseDTO testCard;
 
     @BeforeEach
     void setUp() {
@@ -40,10 +42,18 @@ class CommentServiceTest {
         testComment.setAuthorId(1L);
         testComment.setContent("Test comment");
         testComment.setIsDeleted(false);
+
+        testUser = new UserResponseDTO();
+        testUser.setUserId(1L);
+        testUser.setUsername("testuser");
+
+        testCard = new CardResponseDTO();
+        testCard.setCardId(1L);
     }
 
     @Test
     void getByCard_returnsList() {
+        when(cardServiceClient.getCardById(1L)).thenReturn(testCard);
         when(commentRepository
             .findByCardIdAndParentCommentIdIsNullAndIsDeletedFalseOrderByCreatedAtAsc(1L))
             .thenReturn(List.of(testComment));
@@ -54,7 +64,7 @@ class CommentServiceTest {
 
     @Test
     void getCommentById_notFound_throws() {
-        when(commentRepository.findById(99L)).thenReturn(Optional.empty());
+        when(commentRepository.findByCommentIdAndIsDeletedFalse(99L)).thenReturn(Optional.empty());
         assertThrows(RuntimeException.class, () -> commentService.getCommentById(99L));
     }
 
@@ -63,10 +73,8 @@ class CommentServiceTest {
         CommentRequestDTO req = new CommentRequestDTO();
         req.setCardId(1L); req.setContent("Hello");
 
-        UserResponseDTO user = new UserResponseDTO();
-        user.setUserId(1L); user.setUsername("testuser");
-
-        when(authServiceClient.getUserByEmail(anyString())).thenReturn(user);
+        when(authServiceClient.getUserByEmail(anyString())).thenReturn(testUser);
+        when(cardServiceClient.getCardById(1L)).thenReturn(testCard);
         when(commentRepository.save(any(Comment.class))).thenReturn(testComment);
 
         CommentResponseDTO result = commentService.addComment(req, "author@test.com");
@@ -76,17 +84,17 @@ class CommentServiceTest {
 
     @Test
     void deleteComment_authorCanDelete() {
-        UserResponseDTO user = new UserResponseDTO();
-        user.setUserId(1L);
-        when(commentRepository.findById(1L)).thenReturn(Optional.of(testComment));
-        when(authServiceClient.getUserByEmail(anyString())).thenReturn(user);
+        when(authServiceClient.getUserByEmail(anyString())).thenReturn(testUser);
+        when(commentRepository.findByCommentIdAndIsDeletedFalse(1L))
+                .thenReturn(Optional.of(testComment));
         commentService.deleteComment(1L, "author@test.com");
         verify(commentRepository).save(any());
     }
 
     @Test
     void getCommentCount_returnsCount() {
-        when(commentRepository.findByCardId(1L)).thenReturn(List.of(testComment));
+        when(cardServiceClient.getCardById(1L)).thenReturn(testCard);
+        when(commentRepository.countByCardIdAndIsDeletedFalse(1L)).thenReturn(1L);
         long count = commentService.getCommentCount(1L);
         assertEquals(1L, count);
     }

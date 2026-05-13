@@ -82,8 +82,7 @@ class NotificationServiceTest {
 
     @Test
     void getUnreadCount_returnsCorrectCount() {
-        when(notificationRepository.findByRecipientIdAndIsReadOrderByCreatedAtDesc(1L, false))
-                .thenReturn(List.of(testNotif));
+        when(notificationRepository.countByRecipientIdAndIsRead(1L, false)).thenReturn(1L);
         long count = notificationService.getUnreadCount(1L);
         assertEquals(1L, count);
     }
