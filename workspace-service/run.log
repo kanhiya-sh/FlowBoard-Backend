@@ -1,0 +1,369 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::                (v3.2.5)
+
+2026-05-03T21:29:09.594+05:30  INFO 30032 --- [workspace-service] [  restartedMain] c.f.w.WorkspaceServiceApplication        : Starting WorkspaceServiceApplication using Java 17.0.18 with PID 30032 (D:\VsCODE\FlowBoardSprint\FlowBoard\workspace-service\target\classes started by Kanhiya Sharma in D:\VsCODE\FlowBoardSprint\FlowBoard\workspace-service)
+2026-05-03T21:29:09.598+05:30  INFO 30032 --- [workspace-service] [  restartedMain] c.f.w.WorkspaceServiceApplication        : No active profile set, falling back to 1 default profile: "default"
+2026-05-03T21:29:09.747+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-05-03T21:29:09.747+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-05-03T21:29:11.325+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-05-03T21:29:11.328+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2026-05-03T21:29:11.546+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 203 ms. Found 2 JPA repository interfaces.
+2026-05-03T21:29:11.572+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-05-03T21:29:11.575+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-05-03T21:29:11.597+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.flowboard.workspace.repository.WorkspaceMemberRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-03T21:29:11.597+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .RepositoryConfigurationExtensionSupport : Spring Data Redis - Could not safely identify store assignment for repository candidate interface com.flowboard.workspace.repository.WorkspaceRepository; If you want this repository to be a Redis repository, consider annotating your entities with one of these annotations: org.springframework.data.redis.core.RedisHash (preferred), or consider extending one of the following types with your repository: org.springframework.data.keyvalue.repository.KeyValueRepository
+2026-05-03T21:29:11.597+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 9 ms. Found 0 Redis repository interfaces.
+2026-05-03T21:29:12.270+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.cloud.context.scope.GenericScope     : BeanFactory id=d7a80092-c808-3bef-ba20-765127f2c387
+2026-05-03T21:29:12.601+05:30  WARN 30032 --- [workspace-service] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig' of type [org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration$DeferringLoadBalancerInterceptorConfig] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). The currently created BeanPostProcessor [lbRestClientPostProcessor] is declared through a non-static factory method on that class; consider declaring it as static instead.
+2026-05-03T21:29:12.606+05:30  WARN 30032 --- [workspace-service] [  restartedMain] trationDelegate$BeanPostProcessorChecker : Bean 'deferringLoadBalancerInterceptor' of type [org.springframework.cloud.client.loadbalancer.DeferringLoadBalancerInterceptor] is not eligible for getting processed by all BeanPostProcessors (for example: not eligible for auto-proxying). Is this bean getting eagerly injected into a currently created BeanPostProcessor [lbRestClientPostProcessor]? Check the corresponding BeanPostProcessor declaration and its dependencies.
+2026-05-03T21:29:13.233+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8082 (http)
+2026-05-03T21:29:13.250+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-05-03T21:29:13.250+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-05-03T21:29:13.334+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2026-05-03T21:29:13.335+05:30  INFO 30032 --- [workspace-service] [  restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 3586 ms
+2026-05-03T21:29:13.574+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-05-03T21:29:13.659+05:30  INFO 30032 --- [workspace-service] [  restartedMain] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.4.4.Final
+2026-05-03T21:29:13.707+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2026-05-03T21:29:14.029+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2026-05-03T21:29:14.066+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-05-03T21:29:14.288+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@68e6ce39
+2026-05-03T21:29:14.291+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-05-03T21:29:14.376+05:30  WARN 30032 --- [workspace-service] [  restartedMain] org.hibernate.orm.deprecation            : HHH90000025: MySQLDialect does not need to be specified explicitly using 'hibernate.dialect' (remove the property setting and it will be selected by default)
+2026-05-03T21:29:15.675+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2026-05-03T21:29:15.779+05:30  INFO 30032 --- [workspace-service] [  restartedMain] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2026-05-03T21:29:16.793+05:30  WARN 30032 --- [workspace-service] [  restartedMain] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-05-03T21:29:16.849+05:30  WARN 30032 --- [workspace-service] [  restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-05-03T21:29:17.176+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.c.openfeign.FeignClientFactoryBean   : For 'auth-service' URL not provided. Will try picking an instance via load-balancing.
+2026-05-03T21:29:18.167+05:30  WARN 30032 --- [workspace-service] [  restartedMain] .s.s.UserDetailsServiceAutoConfiguration : 
+
+Using generated security password: 16258746-73da-4c81-b4c4-03f430e02b99
+
+This generated password is for development use only. Your security configuration must be updated before running your application in production.
+
+2026-05-03T21:29:18.580+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@60d1b179, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@5b5c1766, org.springframework.security.web.context.SecurityContextHolderFilter@2d1abfa9, org.springframework.security.web.header.HeaderWriterFilter@77fb1e4c, org.springframework.web.filter.CorsFilter@a1dd9f8, org.springframework.security.web.authentication.logout.LogoutFilter@606593c0, com.flowboard.workspace.security.JwtAuthenticationFilter@a6bfd2e, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@71def6f8, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@9b138a, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@3c42a5c4, org.springframework.security.web.session.SessionManagementFilter@4f8fd038, org.springframework.security.web.access.ExceptionTranslationFilter@89c515a, org.springframework.security.web.access.intercept.AuthorizationFilter@29925499]
+2026-05-03T21:29:19.443+05:30  INFO 30032 --- [workspace-service] [  restartedMain] DiscoveryClientOptionalArgsConfiguration : Eureka HTTP Client uses RestTemplate.
+2026-05-03T21:29:19.480+05:30  WARN 30032 --- [workspace-service] [  restartedMain] iguration$LoadBalancerCaffeineWarnLogger : Spring Cloud LoadBalancer is currently working with the default cache. While this cache implementation is useful for development and tests, it's recommended to use Caffeine cache in production.You can switch to using Caffeine cache, by adding it and org.springframework.cache.caffeine.CaffeineCacheManager to the classpath.
+2026-05-03T21:29:19.547+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.c.n.eureka.InstanceInfoFactory       : Setting initial instance status as: STARTING
+2026-05-03T21:29:19.778+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Initializing Eureka in region us-east-1
+2026-05-03T21:29:19.791+05:30  INFO 30032 --- [workspace-service] [  restartedMain] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T21:29:19.834+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Disable delta property : false
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Single vip registry refresh property : null
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Force full registry fetch : false
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application is null : false
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Registered Applications size is zero : true
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Application version is -1: true
+2026-05-03T21:29:19.835+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Getting all instance registry info from the eureka server
+2026-05-03T21:29:20.248+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : The response status is 200
+2026-05-03T21:29:20.254+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Starting heartbeat executor: renew interval is: 30
+2026-05-03T21:29:20.259+05:30  INFO 30032 --- [workspace-service] [  restartedMain] c.n.discovery.InstanceInfoReplicator     : InstanceInfoReplicator onDemand update allowed rate per min is 4
+2026-05-03T21:29:20.265+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Discovery Client initialized at timestamp 1777823960264 with initial instances count: 9
+2026-05-03T21:29:20.276+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.c.n.e.s.EurekaServiceRegistry        : Registering application WORKSPACE-SERVICE with eureka with status UP
+2026-05-03T21:29:20.277+05:30  INFO 30032 --- [workspace-service] [  restartedMain] com.netflix.discovery.DiscoveryClient    : Saw local status change event StatusChangeEvent [timestamp=1777823960277, current=UP, previous=STARTING]
+2026-05-03T21:29:20.280+05:30  INFO 30032 --- [workspace-service] [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_WORKSPACE-SERVICE/Kanhiya.mshome.net:workspace-service:8082: registering service...
+2026-05-03T21:29:20.322+05:30  INFO 30032 --- [workspace-service] [  restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8082 (http) with context path ''
+2026-05-03T21:29:20.323+05:30  INFO 30032 --- [workspace-service] [  restartedMain] .s.c.n.e.s.EurekaAutoServiceRegistration : Updating port to 8082
+2026-05-03T21:29:20.357+05:30  INFO 30032 --- [workspace-service] [nfoReplicator-0] com.netflix.discovery.DiscoveryClient    : DiscoveryClient_WORKSPACE-SERVICE/Kanhiya.mshome.net:workspace-service:8082 - registration status: 204
+2026-05-03T21:29:20.471+05:30  INFO 30032 --- [workspace-service] [  restartedMain] c.f.w.WorkspaceServiceApplication        : Started WorkspaceServiceApplication in 11.593 seconds (process running for 12.394)
+2026-05-03T21:31:11.622+05:30  INFO 30032 --- [workspace-service] [nio-8082-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-05-03T21:31:11.623+05:30  INFO 30032 --- [workspace-service] [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-05-03T21:31:11.629+05:30  INFO 30032 --- [workspace-service] [nio-8082-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 6 ms
+2026-05-03T21:31:14.492+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (END_ARRAY), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[]"; line: 1, column: 2] ]
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+2026-05-03T21:34:19.849+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T21:36:18.523+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (END_ARRAY), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[]"; line: 1, column: 2] ]
+2026-05-03T21:36:18.850+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-5] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (END_ARRAY), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[]"; line: 1, column: 2] ]
+Hibernate: 
+    insert 
+    into
+        workspace
+        (created_at, description, logo_url, name, owner_id, updated_at, visibility) 
+    values
+        (?, ?, ?, ?, ?, ?, ?)
+2026-05-03T21:36:43.883+05:30  INFO 30032 --- [workspace-service] [nio-8082-exec-6] c.f.w.serviceImpl.WorkspaceServiceImpl   : Workspace saved to DB: id=11, name=demo, owner=9
+Hibernate: 
+    insert 
+    into
+        workspace_members
+        (joined_at, role, user_id, workspace_id) 
+    values
+        (?, ?, ?, ?)
+2026-05-03T21:36:43.897+05:30  INFO 30032 --- [workspace-service] [nio-8082-exec-6] c.f.w.serviceImpl.WorkspaceServiceImpl   : WorkspaceMember saved: workspaceId=11, userId=9
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.workspace_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+2026-05-03T21:37:04.045+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:07.936+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.MemberDTO","userId":9,"fullName":"Kanhiya Sharma","email":"sharmakanhiya2112@gmail.com","username":"sharmakanhiya2112","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocL5tkfNHtMO-LUilSSu7sqgWSiokNJHoYIa49Beyv4vS-Ijgg=s96-c","role":"ADMIN"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:13.948+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:14.722+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.MemberDTO","userId":9,"fullName":"Kanhiya Sharma","email":"sharmakanhiya2112@gmail.com","username":"sharmakanhiya2112","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocL5tkfNHtMO-LUilSSu7sqgWSiokNJHoYIa49Beyv4vS-Ijgg=s96-c","role":"ADMIN"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:17.274+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:17.898+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.MemberDTO","userId":9,"fullName":"Kanhiya Sharma","email":"sharmakanhiya2112@gmail.com","username":"sharmakanhiya2112","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocL5tkfNHtMO-LUilSSu7sqgWSiokNJHoYIa49Beyv4vS-Ijgg=s96-c","role":"ADMIN"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:18.895+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:19.603+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.MemberDTO","userId":9,"fullName":"Kanhiya Sharma","email":"sharmakanhiya2112@gmail.com","username":"sharmakanhiya2112","avatarUrl":"https://lh3.googleusercontent.com/a/ACg8ocL5tkfNHtMO-LUilSSu7sqgWSiokNJHoYIa49Beyv4vS-Ijgg=s96-c","role":"ADMIN"}]"; line: 1, column: 2] ]
+2026-05-03T21:39:19.864+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T21:39:24.714+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:44:19.879+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+2026-05-03T21:47:13.970+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:14.154+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:18.311+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:19.071+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:22.300+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:22.571+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:25.009+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:25.537+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:27.914+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:28.233+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-5] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:33.937+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:34.119+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:36.829+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:37.063+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:39.018+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:39.367+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:42.448+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:42.663+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:51.981+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:52.711+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-5] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:56.045+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-6] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:47:56.308+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-7] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:48:00.711+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-8] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:48:00.893+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:49:19.888+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T21:50:07.910+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:50:09.189+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:50:21.041+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-3] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:50:21.377+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-1] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:54:19.896+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T21:56:35.272+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T21:59:21.051+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:04:21.065+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:09:21.077+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:14:21.094+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:19:21.107+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:24:21.115+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:29:21.121+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+2026-05-03T22:34:21.122+05:30  INFO 30032 --- [workspace-service] [trap-executor-0] c.n.d.s.r.aws.ConfigClusterResolver      : Resolving eureka endpoints via configuration
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.user_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        w1_0.workspace_id,
+        w1_0.created_at,
+        w1_0.description,
+        w1_0.logo_url,
+        w1_0.name,
+        w1_0.owner_id,
+        w1_0.updated_at,
+        w1_0.visibility 
+    from
+        workspace w1_0 
+    where
+        w1_0.workspace_id=?
+Hibernate: 
+    select
+        wm1_0.member_id,
+        wm1_0.joined_at,
+        wm1_0.role,
+        wm1_0.user_id,
+        wm1_0.workspace_id 
+    from
+        workspace_members wm1_0 
+    where
+        wm1_0.workspace_id=?
+2026-05-03T22:34:49.487+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-9] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T22:34:53.220+05:30  WARN 30032 --- [workspace-service] [io-8082-exec-10] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+2026-05-03T22:34:53.402+05:30  WARN 30032 --- [workspace-service] [nio-8082-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [org.springframework.data.redis.serializer.SerializationException: Could not read JSON:Unexpected token (START_OBJECT), expected VALUE_STRING: need String, Number of Boolean value that contains type id (for subtype of java.lang.Object)<EOL> at [Source: (byte[])"[{"@class":"com.flowboard.workspace.dto.WorkspaceResponseDTO","workspaceId":11,"name":"demo","description":"","ownerId":9,"visibility":"PRIVATE","createdAt":"2026-05-03T21:36:43.736404","updatedAt":"2026-05-03T21:36:43.736404"}]"; line: 1, column: 2] ]
+[ERROR] Failed to execute goal org.springframework.boot:spring-boot-maven-plugin:3.2.5:run (default-cli) on project workspace-service: Process terminated with exit code: -1 -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoExecutionException
