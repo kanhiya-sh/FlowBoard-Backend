@@ -1,7 +1,9 @@
 package com.flowboard.gateway.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -17,32 +19,29 @@ public class HealthController {
 
     private final WebClient webClient;
 
-    @Value("${services.auth.url:http://localhost:8081}")
-    private String authUrl;
+    // Eureka-resolved service URLs — no hardcoded ports
+    private static final Map<String, String> SERVICES = new LinkedHashMap<>(Map.of(
+            "auth-service",         "http://AUTH-SERVICE",
+            "workspace-service",    "http://WORKSPACE-SERVICE",
+            "board-service",        "http://BOARD-SERVICE",
+            "list-service",         "http://LIST-SERVICE",
+            "card-service",         "http://CARD-SERVICE",
+            "comment-service",      "http://COMMENT-SERVICE",
+            "label-service",        "http://LABEL-SERVICE",
+            "notification-service", "http://NOTIFICATION-SERVICE"
+    ));
 
-    @Value("${services.workspace.url:http://localhost:8082}")
-    private String workspaceUrl;
-
-    @Value("${services.board.url:http://localhost:8083}")
-    private String boardUrl;
-
-    @Value("${services.list.url:http://localhost:8084}")
-    private String listUrl;
-
-    @Value("${services.card.url:http://localhost:8085}")
-    private String cardUrl;
-
-    @Value("${services.comment.url:http://localhost:8086}")
-    private String commentUrl;
-
-    @Value("${services.label.url:http://localhost:8087}")
-    private String labelUrl;
-
-    @Value("${services.notification.url:http://localhost:8088}")
-    private String notificationUrl;
-
-    public HealthController(WebClient.Builder webClientBuilder) {
+    public HealthController(@LoadBalanced WebClient.Builder webClientBuilder) {
         this.webClient = webClientBuilder.build();
+    }
+
+    @Configuration
+    static class WebClientConfig {
+        @Bean
+        @LoadBalanced
+        public WebClient.Builder loadBalancedWebClientBuilder() {
+            return WebClient.builder();
+        }
     }
 
     // ───────── BASIC GATEWAY HEALTH ─────────
@@ -54,17 +53,7 @@ public class HealthController {
         response.put("timestamp", LocalDateTime.now().toString());
         response.put("port", 8080);
         response.put("message", "FlowBoard API Gateway is running");
-
-        response.put("routes", Map.of(
-                "auth-service", authUrl,
-                "workspace-service", workspaceUrl,
-                "board-service", boardUrl,
-                "list-service", listUrl,
-                "card-service", cardUrl,
-                "comment-service", commentUrl,
-                "label-service", labelUrl,
-                "notification-service", notificationUrl
-        ));
+        response.put("routes", SERVICES);
 
         return ResponseEntity.ok(response);
     }
@@ -73,20 +62,10 @@ public class HealthController {
     @GetMapping("/services/status")
     public Mono<ResponseEntity<Map<String, Object>>> servicesStatus() {
 
-        Map<String, String> services = new LinkedHashMap<>();
-        services.put("auth-service", authUrl);
-        services.put("workspace-service", workspaceUrl);
-        services.put("board-service", boardUrl);
-        services.put("list-service", listUrl);
-        services.put("card-service", cardUrl);
-        services.put("comment-service", commentUrl);
-        services.put("label-service", labelUrl);
-        services.put("notification-service", notificationUrl);
-
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("timestamp", LocalDateTime.now().toString());
 
-        return Flux.fromIterable(services.entrySet())
+        return Flux.fromIterable(SERVICES.entrySet())
                 .flatMap(entry ->
                         webClient.get()
                                 .uri(entry.getValue() + "/actuator/health")
