@@ -6,13 +6,18 @@ on:
   pull_request:
     branches: [main, dev]
   workflow_dispatch:
+    inputs:
+      scan_all:
+        description: 'Scan all services regardless of changes'
+        type: boolean
+        default: true
 
 jobs:
   detect-changes:
     name: Detect changed services
     runs-on: ubuntu-latest
     outputs:
-      services: ${{ steps.filter.outputs.changes }}
+      services: ${{ steps.set.outputs.services }}
     steps:
       - uses: actions/checkout@v4
 
@@ -30,6 +35,15 @@ jobs:
             list-service: 'list-service/**'
             notification-service: 'notification-service/**'
             workspace-service: 'workspace-service/**'
+
+      - name: Decide which services to scan
+        id: set
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" && "${{ inputs.scan_all }}" == "true" ]]; then
+            echo 'services=["auth-service","api-gateway","board-service","card-service","comment-service","eureka-server","label-service","list-service","notification-service","workspace-service"]' >> $GITHUB_OUTPUT
+          else
+            echo "services=${{ steps.filter.outputs.changes }}" >> $GITHUB_OUTPUT
+          fi
 
   scan:
     name: Scan ${{ matrix.service }}
