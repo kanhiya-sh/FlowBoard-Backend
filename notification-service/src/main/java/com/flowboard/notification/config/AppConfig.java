@@ -1,14 +1,8 @@
 package com.flowboard.notification.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
+// RestTemplate removed — inter-service calls use Feign Clients with Eureka lb:// routing.
 @Configuration
 public class AppConfig {
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
 }
-

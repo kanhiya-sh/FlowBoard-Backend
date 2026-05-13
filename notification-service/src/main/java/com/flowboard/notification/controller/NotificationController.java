@@ -1,15 +1,14 @@
 package com.flowboard.notification.controller;
 
+import com.flowboard.notification.client.AuthServiceClient;
 import com.flowboard.notification.dto.*;
 import com.flowboard.notification.service.NotificationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Slf4j
@@ -19,18 +18,14 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final RestTemplate restTemplate;
+    private final AuthServiceClient authServiceClient;
 
-    @Value("${auth.service.url}")
-    private String authServiceUrl;
-
-    // Helper
+    // Helper — resolves userId from email via Feign + Eureka
     private Long resolveUserId(HttpServletRequest request) {
         String email = (String) request.getAttribute("userEmail");
         if (email == null) throw new IllegalStateException("User not authenticated");
-        String url = authServiceUrl + "/auth/internal/users/email/" + email;
         try {
-            UserResponseDTO user = restTemplate.getForObject(url, UserResponseDTO.class);
+            UserResponseDTO user = authServiceClient.getUserByEmail(email);
             if (user == null || user.getUserId() == null) {
                 throw new IllegalStateException("Could not resolve user from Auth service");
             }
