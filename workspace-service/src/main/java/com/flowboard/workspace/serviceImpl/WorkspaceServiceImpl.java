@@ -1,0 +1,283 @@
+package com.flowboard.workspace.serviceImpl;
+
+import com.flowboard.workspace.dto.*;
+import com.flowboard.workspace.entity.*;
+import com.flowboard.workspace.enums.Role;
+import com.flowboard.workspace.exception.ResourceNotFoundException;
+import com.flowboard.workspace.exception.UnauthorizedException;
+import com.flowboard.workspace.client.AuthServiceClient;
+import com.flowboard.workspace.messaging.NotificationPublisher;
+import com.flowboard.workspace.repository.*;
+import com.flowboard.workspace.service.WorkspaceService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class WorkspaceServiceImpl implements WorkspaceService {
+
+    private final WorkspaceRepository workspaceRepository;
+    private final WorkspaceMemberRepository memberRepository;
+    private final AuthServiceClient authServiceClient;
+    private final NotificationPublisher notificationPublisher;
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "workspaces_by_user", key = "#ownerId")
+    public WorkspaceResponseDTO createWorkspace(WorkspaceRequestDTO dto, Long ownerId) {
+
+        Workspace workspace = Workspace.builder()
+                .name(dto.getName())
+                .description(dto.getDescription())
+                .ownerId(ownerId)
+                .visibility(dto.getVisibility())
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        Workspace saved = workspaceRepository.save(workspace);
+        workspaceRepository.flush(); // Force DB write immediately
+
+        log.info("Workspace saved to DB: id={}, name={}, owner={}",
+                saved.getWorkspaceId(), saved.getName(), ownerId);
+
+        // Creator automatically becomes ADMIN member
+        WorkspaceMember owner = WorkspaceMember.builder()
+                .workspaceId(saved.getWorkspaceId())
+                .userId(ownerId)
+                .role(Role.ADMIN)
+                .joinedAt(LocalDateTime.now())
+                .build();
+
+        memberRepository.save(owner);
+
+        log.info("WorkspaceMember saved: workspaceId={}, userId={}", saved.getWorkspaceId(), ownerId);
+
+        return mapToResponseDTO(saved);
+    }
+
+    @Override
+    @Cacheable(value = "workspace_by_id", key = "#workspaceId")
+    public WorkspaceResponseDTO getWorkspaceById(Long workspaceId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+        return mapToResponseDTO(workspace);
+    }
+
+    @Override
+    @Cacheable(value = "workspaces_by_user", key = "#userId")
+    public List<WorkspaceResponseDTO> getWorkspacesByUser(Long userId) {
+        return memberRepository.findByUserId(userId).stream()
+                .map(m -> workspaceRepository.findById(m.getWorkspaceId())
+                        .orElseThrow(() -> new ResourceNotFoundException(
+                                "Workspace not found: " + m.getWorkspaceId())))
+                .map(this::mapToResponseDTO)
+                .toList();
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "workspace_by_id", key = "#workspaceId"),
+            @CacheEvict(value = "workspaces_by_user", allEntries = true)
+    })
+    public WorkspaceResponseDTO updateWorkspace(Long workspaceId, WorkspaceRequestDTO dto, Long requesterId) {
+        Workspace existing = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        boolean isAdminMember = memberRepository.findByWorkspaceId(workspaceId).stream()
+                .anyMatch(m -> m.getUserId().equals(requesterId) && m.getRole() == Role.ADMIN);
+
+        if (!existing.getOwnerId().equals(requesterId) && !isAdminMember) {
+            throw new UnauthorizedException("You do not have permission to update this workspace");
+        }
+
+        if (dto.getName() != null && !dto.getName().isBlank()) existing.setName(dto.getName());
+        if (dto.getDescription() != null) existing.setDescription(dto.getDescription());
+        if (dto.getVisibility() != null) existing.setVisibility(dto.getVisibility());
+        existing.setUpdatedAt(LocalDateTime.now());
+
+        return mapToResponseDTO(workspaceRepository.save(existing));
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "workspace_by_id", key = "#workspaceId"),
+            @CacheEvict(value = "workspaces_by_user", allEntries = true),
+            @CacheEvict(value = "workspace_members", key = "#workspaceId")
+    })
+    public void deleteWorkspace(Long workspaceId, Long requesterId) {
+        Workspace existing = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        if (!existing.getOwnerId().equals(requesterId)) {
+            throw new UnauthorizedException("Only the workspace owner can delete it");
+        }
+
+        memberRepository.deleteAll(memberRepository.findByWorkspaceId(workspaceId));
+        workspaceRepository.delete(existing);
+        log.info("Workspace deleted: id={} by userId={}", workspaceId, requesterId);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "workspace_members", key = "#workspaceId"),
+            @CacheEvict(value = "workspaces_by_user", key = "#userId")
+    })
+    public MemberDTO addMember(Long workspaceId, Long userId, String role, Long requesterId) {
+        workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        boolean alreadyMember = memberRepository.existsByWorkspaceIdAndUserId(workspaceId, userId);
+        if (alreadyMember) {
+            throw new IllegalArgumentException(
+                    "User " + userId + " is already a member of this workspace");
+        }
+
+        WorkspaceMember member = WorkspaceMember.builder()
+                .workspaceId(workspaceId)
+                .userId(userId)
+                .role(Role.valueOf(role.toUpperCase()))
+                .joinedAt(LocalDateTime.now())
+                .build();
+
+        MemberDTO result = mapToMemberDTO(memberRepository.save(member));
+
+        // Publish invite notification
+        Workspace ws = workspaceRepository.findById(workspaceId).orElse(null);
+        String wsName = ws != null ? ws.getName() : "a workspace";
+        notificationPublisher.publish(NotificationEventDTO.builder()
+                .actorId(requesterId)
+                .recipientId(userId)
+                .type("ASSIGNMENT")
+                .title("Workspace Invitation")
+                .message("You have been added to workspace: " + wsName)
+                .relatedId(workspaceId)
+                .relatedType("WORKSPACE")
+                .deepLinkUrl("/workspace/" + workspaceId)
+                .build());
+
+        return result;
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "workspace_members", key = "#workspaceId"),
+            @CacheEvict(value = "workspaces_by_user", key = "#userId")
+    })
+    public void removeMember(Long workspaceId, Long userId, Long requesterId) {
+        Workspace workspace = workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        if (workspace.getOwnerId().equals(userId)) {
+            throw new IllegalArgumentException("Cannot remove the workspace owner");
+        }
+
+        WorkspaceMember member = memberRepository.findByWorkspaceIdAndUserId(workspaceId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Member not found in workspace " + workspaceId));
+
+        memberRepository.delete(member);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "workspace_members", key = "#workspaceId")
+    public MemberDTO updateMemberRole(Long workspaceId, Long userId, String role, Long requesterId) {
+        workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        WorkspaceMember member = memberRepository.findByWorkspaceIdAndUserId(workspaceId, userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Member not found in workspace " + workspaceId));
+
+        member.setRole(Role.valueOf(role.toUpperCase()));
+        return mapToMemberDTO(memberRepository.save(member));
+    }
+
+    @Override
+    @Cacheable(value = "workspace_members", key = "#workspaceId")
+    public List<MemberDTO> getMembers(Long workspaceId) {
+        workspaceRepository.findById(workspaceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workspace not found: " + workspaceId));
+
+        return memberRepository.findByWorkspaceId(workspaceId).stream()
+                .map(this::mapToMemberDTO)
+                .toList();
+    }
+
+    @Override
+    public List<WorkspaceResponseDTO> getPublicWorkspacesByUser(Long userId) {
+        return memberRepository.findByUserId(userId).stream()
+                .map(m -> workspaceRepository.findById(m.getWorkspaceId()).orElse(null))
+                .filter(w -> w != null && w.getVisibility() == com.flowboard.workspace.enums.Visibility.PUBLIC)
+                .map(this::mapToResponseDTO)
+                .toList();
+    }
+
+    @Override
+    public InternalMemberCheckDTO checkMembership(Long workspaceId, Long userId) {
+        if (!workspaceRepository.existsById(workspaceId)) {
+            log.warn("checkMembership: workspace {} does not exist", workspaceId);
+            return new InternalMemberCheckDTO(false, null);
+        }
+
+        return memberRepository.findByWorkspaceIdAndUserId(workspaceId, userId)
+                .map(m -> {
+                    log.debug("checkMembership: user {} IS member of workspace {} with role {}",
+                            userId, workspaceId, m.getRole().name());
+                    return new InternalMemberCheckDTO(true, m.getRole().name());
+                })
+                .orElseGet(() -> {
+                    log.debug("checkMembership: user {} is NOT member of workspace {}",
+                            userId, workspaceId);
+                    return new InternalMemberCheckDTO(false, null);
+                });
+    }
+
+    // ─── Mappers ──────────────────────────────────────────────────────────────────
+
+    private WorkspaceResponseDTO mapToResponseDTO(Workspace w) {
+        int memberCount = (int) memberRepository.countByWorkspaceId(w.getWorkspaceId());
+        return WorkspaceResponseDTO.builder()
+                .workspaceId(w.getWorkspaceId())
+                .name(w.getName())
+                .description(w.getDescription())
+                .ownerId(w.getOwnerId())
+                .visibility(w.getVisibility())
+                .createdAt(w.getCreatedAt())
+                .updatedAt(w.getUpdatedAt())
+                .memberCount(memberCount)
+                .build();
+    }
+
+    private MemberDTO mapToMemberDTO(WorkspaceMember m) {
+        MemberDTO.MemberDTOBuilder builder = MemberDTO.builder()
+                .userId(m.getUserId())
+                .role(m.getRole());
+        try {
+            UserResponseDTO user = authServiceClient.getUserById(m.getUserId());
+            if (user != null) {
+                builder.fullName(user.getFullName())
+                       .email(user.getEmail())
+                       .username(user.getUsername())
+                       .avatarUrl(user.getAvatarUrl());
+            }
+        } catch (Exception e) {
+            log.warn("Could not resolve user details for userId={}: {}", m.getUserId(), e.getMessage());
+        }
+        return builder.build();
+    }
+}
