@@ -13,6 +13,7 @@ public interface WorkspaceService {
     void removeMember(Long workspaceId, Long userId, Long requesterId);
     MemberDTO updateMemberRole(Long workspaceId, Long userId, String role, Long requesterId);
     List<MemberDTO> getMembers(Long workspaceId);
+    List<WorkspaceResponseDTO> getPublicWorkspacesByUser(Long userId);
     // Internal check used by board-service
     InternalMemberCheckDTO checkMembership(Long workspaceId, Long userId);
 }

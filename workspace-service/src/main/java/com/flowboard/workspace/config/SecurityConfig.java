@@ -27,7 +27,8 @@ public class SecurityConfig {
                 // (JWT filter skips these paths too — see JwtAuthenticationFilter)
                 .requestMatchers("/workspaces/internal/**").permitAll()
                 // All other workspace endpoints require JWT
-                .anyRequest().authenticated()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .formLogin(f -> f.disable())

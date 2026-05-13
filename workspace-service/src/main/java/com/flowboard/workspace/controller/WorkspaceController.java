@@ -1,16 +1,14 @@
 package com.flowboard.workspace.controller;
 
+import com.flowboard.workspace.client.AuthServiceClient;
 import com.flowboard.workspace.dto.*;
 import com.flowboard.workspace.service.WorkspaceService;
-import com.flowboard.workspace.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Slf4j
@@ -20,24 +18,19 @@ import java.util.List;
 public class WorkspaceController {
 
     private final WorkspaceService workspaceService;
-    private final JwtUtil jwtUtil;
-    private final RestTemplate restTemplate;
-
-    @Value("${auth.service.url}")
-    private String authServiceUrl;
+    private final AuthServiceClient authServiceClient;
 
     /**
      * Reads email from request attribute (set by JwtAuthenticationFilter)
-     * then calls Auth service to get the full user object with userId.
+     * then calls Auth service (via Feign) to get the full user object with userId.
      */
     private Long resolveUserId(HttpServletRequest request) {
         String email = (String) request.getAttribute("userEmail");
         if (email == null) {
             throw new IllegalStateException("User email not found in request. Is JWT filter running?");
         }
-        String url = authServiceUrl + "/auth/internal/users/email/" + email;
         try {
-            UserResponseDTO user = restTemplate.getForObject(url, UserResponseDTO.class);
+            UserResponseDTO user = authServiceClient.getUserByEmail(email);
             if (user == null || user.getUserId() == null) {
                 throw new IllegalStateException("Could not resolve user from Auth service for email: " + email);
             }
@@ -74,6 +67,11 @@ public class WorkspaceController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<WorkspaceResponseDTO>> getWorkspacesByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(workspaceService.getWorkspacesByUser(userId));
+    }
+
+    @GetMapping("/user/{userId}/public")
+    public ResponseEntity<List<WorkspaceResponseDTO>> getPublicWorkspacesByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(workspaceService.getPublicWorkspacesByUser(userId));
     }
 
     @PutMapping("/{id}")
@@ -138,5 +136,13 @@ public class WorkspaceController {
             @PathVariable Long workspaceId,
             @PathVariable Long userId) {
         return ResponseEntity.ok(workspaceService.checkMembership(workspaceId, userId));
+    }
+
+    // Internal service-to-service members listing used by board-service to build
+    // the "assignable users" set for a board. Mirrors the public /members
+    // endpoint but lives under /internal/* so it bypasses gateway JWT filtering.
+    @GetMapping("/internal/{workspaceId}/members")
+    public ResponseEntity<List<MemberDTO>> listMembersInternal(@PathVariable Long workspaceId) {
+        return ResponseEntity.ok(workspaceService.getMembers(workspaceId));
     }
 }
