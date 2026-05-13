@@ -106,6 +106,14 @@ public class BoardController {
         return ResponseEntity.ok(boardService.getBoardMembers(boardId));
     }
 
+    // Assignee picker data: union of explicit board members + workspace members
+    // of the parent workspace. Used by the card-detail assignee dropdown so
+    // invited users appear even without an explicit board_members row.
+    @GetMapping("/{boardId}/assignable-users")
+    public ResponseEntity<List<BoardMemberResponseDTO>> getAssignableUsers(@PathVariable Long boardId) {
+        return ResponseEntity.ok(boardService.getAssignableUsers(boardId));
+    }
+
     // Internal Endpoint (called by list-service and card-service — no JWT needed)
     @GetMapping("/internal/{boardId}/members/{userId}/check")
     public ResponseEntity<BoardMemberCheckResponseDTO> checkBoardMembership(

@@ -20,4 +20,9 @@ public interface BoardService {
     BoardMemberResponseDTO updateMemberRole(Long boardId, Long userId, BoardRole role, String userEmail);
     List<BoardMemberResponseDTO> getBoardMembers(Long boardId);
     BoardMemberCheckResponseDTO checkBoardMembership(Long boardId, Long userId);
+
+    // Union of explicit board members + workspace members of the parent workspace.
+    // Used to populate assignee pickers so invited workspace members can be
+    // picked even when they weren't explicitly added to the board.
+    List<BoardMemberResponseDTO> getAssignableUsers(Long boardId);
 }

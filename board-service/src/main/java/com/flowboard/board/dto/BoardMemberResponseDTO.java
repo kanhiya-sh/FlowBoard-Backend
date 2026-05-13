@@ -14,4 +14,12 @@ public class BoardMemberResponseDTO {
     private Long userId;
     private BoardRole role;
     private LocalDateTime addedAt;
+
+    // Enriched lazily from Auth service so the frontend can render the user's
+    // email/name without separate lookups. Stay null if Auth call fails so the
+    // response payload still ships.
+    private String fullName;
+    private String email;
+    private String username;
+    private String avatarUrl;
 }
