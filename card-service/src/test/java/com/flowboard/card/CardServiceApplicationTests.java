@@ -12,9 +12,9 @@ import org.springframework.test.context.TestPropertySource;
     "spring.jpa.hibernate.ddl-auto=create-drop",
     "jwt.secret=mysecretkeymysecretkeymysecretkey",
     "jwt.expiration=86400000",
-    "auth.service.url=http://localhost:8081",
-    "board.service.url=http://localhost:8083",
-    "list.service.url=http://localhost:8084"
+    "eureka.client.enabled=false",
+    "spring.cloud.discovery.enabled=false",
+    "spring.cache.type=none"
 })
 class CardServiceApplicationTests {
 

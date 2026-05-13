@@ -1,5 +1,8 @@
 package com.flowboard.card.serviceImpl;
 
+import com.flowboard.card.client.AuthServiceClient;
+import com.flowboard.card.client.BoardServiceClient;
+import com.flowboard.card.client.ListServiceClient;
 import com.flowboard.card.dto.*;
 import com.flowboard.card.entity.Card;
 import com.flowboard.card.enums.Priority;
@@ -8,16 +11,16 @@ import com.flowboard.card.exception.ResourceNotFoundException;
 import com.flowboard.card.exception.UnauthorizedException;
 import com.flowboard.card.repository.CardRepository;
 import com.flowboard.card.service.CardService;
+import com.flowboard.card.service.NotificationPublisher;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -25,61 +28,44 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CardServiceImpl implements CardService {
     private final CardRepository cardRepository;
-    private final RestTemplate restTemplate;
-
-    @Value("${auth.service.url}")
-    private String authServiceUrl;
-
-    @Value("${board.service.url}")
-    private String boardServiceUrl;
-
-    @Value("${list.service.url}")
-    private String listServiceUrl;
+    private final AuthServiceClient authServiceClient;
+    private final BoardServiceClient boardServiceClient;
+    private final ListServiceClient listServiceClient;
+    private final NotificationPublisher notificationPublisher;
 
     // Internal Helpers
     private Long resolveUserIdFromEmail(String email) {
-        String url = authServiceUrl + "/auth/internal/users/email/" + email;
         try {
-            UserResponseDTO user = restTemplate.getForObject(url, UserResponseDTO.class);
+            UserResponseDTO user = authServiceClient.getUserByEmail(email);
             if (user == null || user.getUserId() == null) {
                 throw new UnauthorizedException("Could not resolve user from Auth service");
             }
             return user.getUserId();
-        }
-        catch (UnauthorizedException e) {
+        } catch (UnauthorizedException e) {
             throw e;
-        }
-        catch (ResourceAccessException e) {
-            log.error("Auth service DOWN: {}", e.getMessage());
-            throw new IllegalStateException("Auth service is currently unavailable.");
-        }
-        catch (HttpClientErrorException e) {
-            log.error("Auth service error for email {}: {}", email, e.getStatusCode());
+        } catch (FeignException.NotFound e) {
             throw new UnauthorizedException("User not found in Auth service");
-        }
-        catch (Exception e) {
+        } catch (FeignException e) {
+            log.error("Auth service call failed: {}", e.getMessage());
+            throw new IllegalStateException("Auth service is currently unavailable.");
+        } catch (Exception e) {
             log.error("Unexpected error calling Auth service: {}", e.getMessage());
             throw new IllegalStateException("Auth service error: " + e.getMessage());
         }
     }
 
     private BoardMemberCheckDTO checkBoardMembership(Long boardId, Long userId) {
-        String url = boardServiceUrl + "/boards/internal/" + boardId + "/members/" + userId + "/check";
         try {
-            BoardMemberCheckDTO result = restTemplate.getForObject(url, BoardMemberCheckDTO.class);
+            BoardMemberCheckDTO result = boardServiceClient.checkBoardMembership(boardId, userId);
             if (result == null) {
-                log.warn("Board service returned null for board {} user {}", boardId, userId);
                 return new BoardMemberCheckDTO(false, null);
             }
-            log.debug("Board membership check board={} user={}: isMember={}, role={}",
-                    boardId, userId, result.isMember(), result.getRole());
             return result;
-        } catch (ResourceAccessException e) {
-            log.error("Board service DOWN: {}", e.getMessage());
-            throw new IllegalStateException("Board service is currently unavailable.");
-        } catch (HttpClientErrorException e) {
-            log.error("Board service error board={} user={}: {}", boardId, userId, e.getStatusCode());
+        } catch (FeignException.NotFound e) {
             return new BoardMemberCheckDTO(false, null);
+        } catch (FeignException e) {
+            log.error("Board service call failed: {}", e.getMessage());
+            throw new IllegalStateException("Board service is currently unavailable.");
         } catch (Exception e) {
             log.error("Unexpected error calling Board service: {}", e.getMessage());
             throw new IllegalStateException("Board service error: " + e.getMessage());
@@ -87,19 +73,18 @@ public class CardServiceImpl implements CardService {
     }
 
     private ListResponseDTO verifyListExists(Long listId) {
-        String url = listServiceUrl + "/lists/internal/" + listId + "/exists";
         try {
-            ListResponseDTO list = restTemplate.getForObject(url, ListResponseDTO.class);
+            ListResponseDTO list = listServiceClient.getListById(listId);
             if (list == null) {
                 throw new ResourceNotFoundException("List not found with id: " + listId);
             }
             return list;
         } catch (ResourceNotFoundException e) {
             throw e;
-        } catch (HttpClientErrorException.NotFound e) {
+        } catch (FeignException.NotFound e) {
             throw new ResourceNotFoundException("List not found with id: " + listId);
-        } catch (ResourceAccessException e) {
-            log.error("List service DOWN: {}", e.getMessage());
+        } catch (FeignException e) {
+            log.error("List service call failed: {}", e.getMessage());
             throw new IllegalStateException("List service is currently unavailable.");
         } catch (Exception e) {
             log.error("Unexpected error calling List service: {}", e.getMessage());
@@ -114,16 +99,6 @@ public class CardServiceImpl implements CardService {
         }
     }
 
-    private void ensureBoardAdmin(Long boardId, Long userId) {
-        BoardMemberCheckDTO m = checkBoardMembership(boardId, userId);
-        if (!m.isMember()) {
-            throw new UnauthorizedException("You are not a member of board " + boardId);
-        }
-        if (!"ADMIN".equalsIgnoreCase(m.getRole())) {
-            throw new UnauthorizedException("You must be a board ADMIN to perform this action");
-        }
-    }
-
     private int nextPosition(Long listId) {
         return cardRepository.findMaxPositionByListId(listId)
                 .map(max -> max + 1)
@@ -133,6 +108,10 @@ public class CardServiceImpl implements CardService {
     // CRUD
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "cards_by_list", key = "#dto.listId"),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card createCard(CardRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
 
@@ -171,17 +150,20 @@ public class CardServiceImpl implements CardService {
     }
 
     @Override
+    @Cacheable(value = "card_by_id", key = "#cardId")
     public Card getCardById(Long cardId) {
         return cardRepository.findByCardId(cardId)
                 .orElseThrow(() -> new ResourceNotFoundException("Card not found with id: " + cardId));
     }
 
     @Override
+    @Cacheable(value = "cards_by_list", key = "#listId")
     public List<Card> getCardsByList(Long listId) {
         return cardRepository.findByListIdAndIsArchivedFalseOrderByPosition(listId);
     }
 
     @Override
+    @Cacheable(value = "cards_by_board", key = "#boardId")
     public List<Card> getCardsByBoard(Long boardId) {
         return cardRepository.findByBoardIdAndIsArchivedFalse(boardId);
     }
@@ -193,6 +175,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card updateCard(Long cardId, CardRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -202,6 +189,11 @@ public class CardServiceImpl implements CardService {
         }
 
         ensureBoardMember(card.getBoardId(), userId);
+
+        // Capture the previous assignee BEFORE we mutate the entity so we can
+        // fire an ASSIGNMENT notification at the end of this transaction if —
+        // and only if — the assignee actually changed in this request.
+        Long previousAssigneeId = card.getAssigneeId();
 
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             card.setTitle(dto.getTitle());
@@ -215,10 +207,14 @@ public class CardServiceImpl implements CardService {
         if (dto.getStatus() != null) {
             card.setStatus(dto.getStatus());
         }
-        if (dto.getDueDate() != null) {
+        if (Boolean.TRUE.equals(dto.getClearDueDate())) {
+            card.setDueDate(null);
+        } else if (dto.getDueDate() != null) {
             card.setDueDate(dto.getDueDate());
         }
-        if (dto.getStartDate() != null) {
+        if (Boolean.TRUE.equals(dto.getClearStartDate())) {
+            card.setStartDate(null);
+        } else if (dto.getStartDate() != null) {
             card.setStartDate(dto.getStartDate());
         }
         if (dto.getAssigneeId() != null) {
@@ -230,11 +226,27 @@ public class CardServiceImpl implements CardService {
 
         Card updated = cardRepository.save(card);
         log.info("Card updated: cardId={} by userId={}", cardId, userId);
+
+        // Fire assignment notification only when updateCard actually shifted
+        // the assignee. Skips no-op saves where the caller re-sent the same
+        // assigneeId and silent unassigns (dto.assigneeId == null case is not
+        // even applied above, so previousAssigneeId is preserved — no notify).
+        Long newAssigneeId = updated.getAssigneeId();
+        boolean assigneeChanged = dto.getAssigneeId() != null
+                && !java.util.Objects.equals(previousAssigneeId, newAssigneeId);
+        if (assigneeChanged && newAssigneeId != null) {
+            notificationPublisher.sendAssignmentNotification(userId, newAssigneeId, cardId, updated.getTitle());
+        }
         return updated;
     }
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public void deleteCard(Long cardId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -253,6 +265,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card moveCard(Long cardId, MoveCardRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -314,6 +331,7 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "cards_by_list", key = "#listId")
     public List<Card> reorderCards(Long listId, ReorderCardsRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         ListResponseDTO list = verifyListExists(listId);
@@ -353,6 +371,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card archiveCard(Long cardId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -371,6 +394,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card unarchiveCard(Long cardId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -405,6 +433,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card setAssignee(Long cardId, AssigneeRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -414,15 +447,34 @@ public class CardServiceImpl implements CardService {
         }
 
         ensureBoardMember(card.getBoardId(), userId);
-        card.setAssigneeId(dto.getAssigneeId()); // null = unassign
+
+        // Capture previous assignee BEFORE mutating so we can decide whether a
+        // notification is actually needed. This guards against duplicate
+        // notifications when the UI "re-saves" the same assignee.
+        Long previousAssigneeId = card.getAssigneeId();
+        Long newAssigneeId = dto.getAssigneeId();
+        card.setAssigneeId(newAssigneeId); // null = unassign
 
         Card saved = cardRepository.save(card);
-        log.info("Card assignee set: cardId={} assigneeId={} by userId={}", cardId, dto.getAssigneeId(), userId);
+        log.info("Card assignee set: cardId={} assigneeId={} by userId={}", cardId, newAssigneeId, userId);
+
+        // Only fire when the assignee genuinely changed, and only for real
+        // assignments (null means "unassign" — nobody to notify).
+        boolean assigneeChanged = !java.util.Objects.equals(previousAssigneeId, newAssigneeId);
+        if (assigneeChanged && newAssigneeId != null) {
+            notificationPublisher.sendAssignmentNotification(userId, newAssigneeId, cardId, saved.getTitle());
+        }
+
         return saved;
     }
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card setPriority(Long cardId, PriorityRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);
@@ -441,6 +493,11 @@ public class CardServiceImpl implements CardService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "card_by_id", key = "#cardId"),
+            @CacheEvict(value = "cards_by_list", allEntries = true),
+            @CacheEvict(value = "cards_by_board", allEntries = true)
+    })
     public Card setStatus(Long cardId, StatusRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         Card card = getCardById(cardId);

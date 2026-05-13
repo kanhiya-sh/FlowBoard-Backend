@@ -27,6 +27,10 @@ public class CardRequestDTO {
     private LocalDate dueDate;
     private LocalDate startDate;
 
+    // Explicit flags so updateCard can clear dueDate/startDate (null check alone treats null as "skip")
+    private Boolean clearDueDate;
+    private Boolean clearStartDate;
+
     private Long assigneeId;
     private String coverColor;
 }
