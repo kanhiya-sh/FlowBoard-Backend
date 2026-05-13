@@ -17,7 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -70,6 +72,29 @@ public class CommentServiceImpl implements CommentService {
             log.error("Card service error for cardId {}: {}", cardId, e.getMessage());
             throw new IllegalStateException("Card service is currently unavailable.");
         }
+    }
+
+    // Null-safe author lookup used to enrich CommentResponseDTO with the
+    // author's email / full name. Never throws — if the Auth service is
+    // unreachable we just return null and the frontend falls back gracefully.
+    private UserResponseDTO safeFindAuthor(Long authorId) {
+        if (authorId == null) return null;
+        try {
+            return authServiceClient.getUserById(authorId);
+        } catch (Exception e) {
+            log.debug("Could not resolve author {} for enrichment: {}", authorId, e.getMessage());
+            return null;
+        }
+    }
+
+    // Batch-cached variant: for list endpoints we resolve each distinct authorId
+    // once per request, then reuse the result for every comment they wrote.
+    private UserResponseDTO cachedAuthor(Long authorId, Map<Long, UserResponseDTO> cache) {
+        if (authorId == null) return null;
+        if (cache.containsKey(authorId)) return cache.get(authorId);
+        UserResponseDTO user = safeFindAuthor(authorId);
+        cache.put(authorId, user);
+        return user;
     }
 
     private Comment findActiveComment(Long commentId) {
@@ -172,7 +197,7 @@ public class CommentServiceImpl implements CommentService {
                 .findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtAsc(saved.getCommentId())
                 .size();
 
-        return CommentMapper.toResponseDTO(saved, replyCount);
+        return CommentMapper.toResponseDTO(saved, replyCount, safeFindAuthor(saved.getAuthorId()));
     }
 
     @Override
@@ -181,10 +206,11 @@ public class CommentServiceImpl implements CommentService {
         List<Comment> topLevel = commentRepository
                 .findByCardIdAndParentCommentIdIsNullAndIsDeletedFalseOrderByCreatedAtAsc(cardId);
 
+        Map<Long, UserResponseDTO> authorCache = new HashMap<>();
         return topLevel.stream().map(c -> {
             int replyCount = commentRepository
                     .findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtAsc(c.getCommentId()).size();
-            return CommentMapper.toResponseDTO(c, replyCount);
+            return CommentMapper.toResponseDTO(c, replyCount, cachedAuthor(c.getAuthorId(), authorCache));
         }).toList();
     }
 
@@ -193,7 +219,7 @@ public class CommentServiceImpl implements CommentService {
         Comment comment = findActiveComment(commentId);
         int replyCount = commentRepository
                 .findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtAsc(commentId).size();
-        return CommentMapper.toResponseDTO(comment, replyCount);
+        return CommentMapper.toResponseDTO(comment, replyCount, safeFindAuthor(comment.getAuthorId()));
     }
 
     @Override
@@ -201,12 +227,13 @@ public class CommentServiceImpl implements CommentService {
         // check parent comment exists
         findActiveComment(parentCommentId);
 
+        Map<Long, UserResponseDTO> authorCache = new HashMap<>();
         return commentRepository
                 .findByParentCommentIdAndIsDeletedFalseOrderByCreatedAtAsc(parentCommentId)
                 .stream()
                 .map(comment -> {
                     int replyCount = commentRepository.countByParentCommentIdAndIsDeletedFalse(comment.getCommentId());
-                    return CommentMapper.toResponseDTO(comment, replyCount);
+                    return CommentMapper.toResponseDTO(comment, replyCount, cachedAuthor(comment.getAuthorId(), authorCache));
                 })
                 .toList();
     }
@@ -232,7 +259,7 @@ public class CommentServiceImpl implements CommentService {
         publishMentionNotifications(userId, comment.getCardId(), dto.getContent());
 
         int replyCount = commentRepository.countByParentCommentIdAndIsDeletedFalse(saved.getCommentId());
-        return CommentMapper.toResponseDTO(saved, replyCount);
+        return CommentMapper.toResponseDTO(saved, replyCount, safeFindAuthor(saved.getAuthorId()));
     }
 
     @Override

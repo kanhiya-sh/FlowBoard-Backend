@@ -26,7 +26,8 @@ public class SecurityConfig {
                 // Internal service-to-service endpoints — no JWT needed
                 .requestMatchers("/comments/internal/**").permitAll()
                 // Everything else requires a valid JWT
-                .anyRequest().authenticated()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
