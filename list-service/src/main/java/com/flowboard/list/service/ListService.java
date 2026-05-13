@@ -30,6 +30,8 @@ public interface ListService {
 
     List<TaskList> getArchivedLists(Long boardId);
 
+    void validateBoardMembership(Long boardId, String userEmail);
+
     // ---- Board Transfer ----
     TaskList moveList(Long listId, MoveListRequestDTO dto, String userEmail);
 }

@@ -36,13 +36,20 @@ public class ListController {
 
 //  Get a single list by its ID
     @GetMapping("/{listId}")
-    public ResponseEntity<ListResponseDTO> getListById(@PathVariable Long listId) {
-        return ResponseEntity.ok(ListMapper.toResponseDTO(listService.getListById(listId)));
+    public ResponseEntity<ListResponseDTO> getListById(
+            @PathVariable Long listId,
+            HttpServletRequest request) {
+        var list = listService.getListById(listId);
+        listService.validateBoardMembership(list.getBoardId(), getEmail(request));
+        return ResponseEntity.ok(ListMapper.toResponseDTO(list));
     }
 
 //  Get all active (non-archived) lists for a board, ordered by position.
     @GetMapping("/board/{boardId}")
-    public ResponseEntity<List<ListResponseDTO>> getListsByBoard(@PathVariable Long boardId) {
+    public ResponseEntity<List<ListResponseDTO>> getListsByBoard(
+            @PathVariable Long boardId,
+            HttpServletRequest request) {
+        listService.validateBoardMembership(boardId, getEmail(request));
         return ResponseEntity.ok(
                 listService.getListsByBoardOrdered(boardId)
                         .stream()
@@ -54,7 +61,10 @@ public class ListController {
 
 //  Get ALL lists for a board including archived, ordered by position.
     @GetMapping("/board/{boardId}/all")
-    public ResponseEntity<List<ListResponseDTO>> getAllListsByBoard(@PathVariable Long boardId) {
+    public ResponseEntity<List<ListResponseDTO>> getAllListsByBoard(
+            @PathVariable Long boardId,
+            HttpServletRequest request) {
+        listService.validateBoardMembership(boardId, getEmail(request));
         return ResponseEntity.ok(
                 listService.getListsByBoardOrdered(boardId)
                         .stream()
@@ -65,7 +75,10 @@ public class ListController {
 
 //  Get all archived lists for a board (for restoration view).
     @GetMapping("/board/{boardId}/archived")
-    public ResponseEntity<List<ListResponseDTO>> getArchivedLists(@PathVariable Long boardId) {
+    public ResponseEntity<List<ListResponseDTO>> getArchivedLists(
+            @PathVariable Long boardId,
+            HttpServletRequest request) {
+        listService.validateBoardMembership(boardId, getEmail(request));
         return ResponseEntity.ok(
                 listService.getArchivedLists(boardId)
                         .stream()

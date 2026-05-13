@@ -6,13 +6,14 @@ import org.springframework.test.context.TestPropertySource;
 
 @SpringBootTest
 @TestPropertySource(properties = {
-    "spring.datasource.url=jdbc:h2:mem:testdb",
+    "spring.datasource.url=jdbc:h2:mem:testdb;MODE=MySQL;DATABASE_TO_LOWER=TRUE",
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.jpa.hibernate.ddl-auto=create-drop",
     "jwt.secret=mysecretkeymysecretkeymysecretkey",
     "jwt.expiration=86400000",
-    "auth.service.url=http://localhost:8081",
-    "board.service.url=http://localhost:8083"
+    "eureka.client.enabled=false",
+    "spring.cloud.discovery.enabled=false",
+    "spring.cache.type=none"
 })
 class ListServiceApplicationTests {
 

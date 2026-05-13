@@ -19,6 +19,8 @@ public interface ListRepository extends JpaRepository<TaskList, Long> {
 
     List<TaskList> findByBoardIdAndIsArchived(Long boardId, Boolean isArchived);
 
+    List<TaskList> findByBoardIdAndIsArchivedOrderByPosition(Long boardId, Boolean isArchived);
+
     long countByBoardId(Long boardId);
 
     @Query("SELECT MAX(t.position) FROM TaskList t WHERE t.boardId = :boardId AND t.isArchived = false")

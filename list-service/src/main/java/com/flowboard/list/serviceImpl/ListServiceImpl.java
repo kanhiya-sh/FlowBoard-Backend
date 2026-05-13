@@ -1,92 +1,72 @@
 package com.flowboard.list.serviceImpl;
 
+import com.flowboard.list.client.AuthServiceClient;
+import com.flowboard.list.client.BoardServiceClient;
 import com.flowboard.list.dto.*;
 import com.flowboard.list.entity.TaskList;
 import com.flowboard.list.exception.ResourceNotFoundException;
 import com.flowboard.list.exception.UnauthorizedException;
 import com.flowboard.list.repository.ListRepository;
 import com.flowboard.list.service.ListService;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ListServiceImpl implements ListService {
     private final ListRepository listRepository;
-    private final RestTemplate restTemplate;
+    private final AuthServiceClient authServiceClient;
+    private final BoardServiceClient boardServiceClient;
 
-    @Value("${auth.service.url}")
-    private String authServiceUrl;
-
-    @Value("${board.service.url}")
-    private String boardServiceUrl;
-
-    // Internal Helpers
-    // Calls Auth Service to resolve email → userId.
-    // Endpoint: GET /auth/internal/users/email/{email}
-
+    // Calls Auth Service (via Feign + Eureka) to resolve email → userId.
     private Long resolveUserIdFromEmail(String email) {
-        String url = authServiceUrl + "/auth/internal/users/email/" + email;
         try {
-            UserResponseDTO user = restTemplate.getForObject(url, UserResponseDTO.class);
+            UserResponseDTO user = authServiceClient.getUserByEmail(email);
             if (user == null || user.getUserId() == null) {
                 throw new UnauthorizedException("Could not resolve user from Auth service");
             }
             return user.getUserId();
-        }
-        catch (UnauthorizedException e) {
+        } catch (UnauthorizedException e) {
             throw e;
-        }
-        catch (ResourceAccessException e) {
-            log.error("Auth service is DOWN - cannot reach {}: {}", url, e.getMessage());
-            throw new IllegalStateException("Auth service is currently unavailable. Please try again later.");
-        }
-        catch (HttpClientErrorException e) {
-            log.error("Auth service returned error for email {}: {}", email, e.getStatusCode());
+        } catch (FeignException.NotFound e) {
             throw new UnauthorizedException("User not found in Auth service");
-        }
-        catch (Exception e) {
+        } catch (FeignException e) {
+            log.error("Auth service call failed for email {}: {}", email, e.getMessage());
+            throw new IllegalStateException("Auth service is currently unavailable.");
+        } catch (Exception e) {
             log.error("Unexpected error calling Auth service for email {}: {}", email, e.getMessage());
             throw new IllegalStateException("Auth service error: " + e.getMessage());
         }
     }
 
     /**
-     * Calls Board Service to verify that userId is a member of the board.
-     * Endpoint: GET /boards/internal/{boardId}/members/{userId}/check
-     * This endpoint has permitAll() in board-service security — no JWT needed.
+     * Calls Board Service (via Feign + Eureka) to verify board membership.
      */
     private BoardMemberCheckDTO checkBoardMembership(Long boardId, Long userId) {
-        String url = boardServiceUrl + "/boards/internal/" + boardId + "/members/" + userId + "/check";
         try {
-            BoardMemberCheckDTO result = restTemplate.getForObject(url, BoardMemberCheckDTO.class);
+            BoardMemberCheckDTO result = boardServiceClient.checkBoardMembership(boardId, userId);
             if (result == null) {
-                log.warn("Board service returned null for board {} user {}", boardId, userId);
                 return new BoardMemberCheckDTO(false, null);
             }
-            log.debug("Board membership check for board {} user {}: isMember={}, role={}",
-                    boardId, userId, result.isMember(), result.getRole());
             return result;
-        }
-        catch (ResourceAccessException e) {
-            log.error("Board service is DOWN - cannot reach {}: {}", url, e.getMessage());
-            throw new IllegalStateException("Board service is currently unavailable. Please try again later.");
-        }
-        catch (HttpClientErrorException e) {
-            log.error("Board service error for board {} user {}: {}", boardId, userId, e.getStatusCode());
+        } catch (FeignException.NotFound e) {
             return new BoardMemberCheckDTO(false, null);
-        }
-        catch (Exception e) {
+        } catch (FeignException e) {
+            log.error("Board service call failed: {}", e.getMessage());
+            throw new IllegalStateException("Board service is currently unavailable.");
+        } catch (Exception e) {
             log.error("Unexpected error calling Board service: {}", e.getMessage());
             throw new IllegalStateException("Board service error: " + e.getMessage());
         }
@@ -133,6 +113,7 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "lists_by_board", key = "#dto.boardId")
     public TaskList createList(ListRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         log.debug("Creating list '{}' for boardId={} by userId={}", dto.getName(), dto.getBoardId(), userId);
@@ -158,12 +139,14 @@ public class ListServiceImpl implements ListService {
     }
 
     @Override
+    @Cacheable(value = "list_by_id", key = "#listId")
     public TaskList getListById(Long listId) {
         return listRepository.findByListId(listId)
                 .orElseThrow(() -> new ResourceNotFoundException("List not found with id: " + listId));
     }
 
     @Override
+    @Cacheable(value = "lists_by_board", key = "#boardId")
     public List<TaskList> getListsByBoard(Long boardId) {
         return listRepository.findByBoardId(boardId);
     }
@@ -175,6 +158,10 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "list_by_id", key = "#listId"),
+            @CacheEvict(value = "lists_by_board", allEntries = true)
+    })
     public TaskList updateList(Long listId, ListRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         TaskList list = getListById(listId);
@@ -201,6 +188,10 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "list_by_id", key = "#listId"),
+            @CacheEvict(value = "lists_by_board", allEntries = true)
+    })
     public void deleteList(Long listId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         TaskList list = getListById(listId);
@@ -216,6 +207,7 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @CacheEvict(value = "lists_by_board", key = "#boardId")
     public List<TaskList> reorderLists(Long boardId, ReorderRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
 
@@ -231,18 +223,20 @@ public class ListServiceImpl implements ListService {
 
         // Validate all list IDs belong to this board
         List<TaskList> allLists = listRepository.findByBoardId(boardId);
-        List<Long> existingIds = allLists.stream().map(TaskList::getListId).toList();
-
-        for (Long id : orderedIds) {
-            if (!existingIds.contains(id)) {
-                throw new IllegalArgumentException("List id=" + id + " does not belong to board " + boardId);
-            }
-        }
 
         // Work only on active (non-archived) lists
         List<TaskList> activeLists = allLists.stream()
                 .filter(l -> !l.getIsArchived())
                 .toList();
+        Set<Long> activeIds = new HashSet<>(activeLists.stream().map(TaskList::getListId).toList());
+        Set<Long> requestedIds = new HashSet<>(orderedIds);
+
+        if (requestedIds.size() != orderedIds.size()) {
+            throw new IllegalArgumentException("orderedListIds must not contain duplicate list IDs");
+        }
+        if (!requestedIds.equals(activeIds)) {
+            throw new IllegalArgumentException("orderedListIds must include every active list from board " + boardId + " exactly once");
+        }
 
         // Update positions only for active lists
         for (int i = 0; i < orderedIds.size(); i++) {
@@ -270,6 +264,10 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "list_by_id", key = "#listId"),
+            @CacheEvict(value = "lists_by_board", allEntries = true)
+    })
     public TaskList archiveList(Long listId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         TaskList list = getListById(listId);
@@ -290,6 +288,10 @@ public class ListServiceImpl implements ListService {
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "list_by_id", key = "#listId"),
+            @CacheEvict(value = "lists_by_board", allEntries = true)
+    })
     public TaskList unarchiveList(Long listId, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         TaskList list = getListById(listId);
@@ -314,13 +316,23 @@ public class ListServiceImpl implements ListService {
 
     @Override
     public List<TaskList> getArchivedLists(Long boardId) {
-        return listRepository.findByBoardIdAndIsArchived(boardId, true);
+        return listRepository.findByBoardIdAndIsArchivedOrderByPosition(boardId, true);
+    }
+
+    @Override
+    public void validateBoardMembership(Long boardId, String userEmail) {
+        Long userId = resolveUserIdFromEmail(userEmail);
+        ensureBoardMember(boardId, userId);
     }
 
     // ─── Board Transfer ────────────────────────────────────────────────────────────
 
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "list_by_id", key = "#listId"),
+            @CacheEvict(value = "lists_by_board", allEntries = true)
+    })
     public TaskList moveList(Long listId, MoveListRequestDTO dto, String userEmail) {
         Long userId = resolveUserIdFromEmail(userEmail);
         TaskList list = getListById(listId);

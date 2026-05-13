@@ -25,7 +25,8 @@ public class SecurityConfig {
                 // Internal endpoints — called by card-service and other services (no JWT)
                 .requestMatchers("/lists/internal/**").permitAll()
                 // All other endpoints require a valid JWT
-                .anyRequest().authenticated()
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
