@@ -1,5 +1,8 @@
 package com.flowboard.label.serviceImpl;
 
+import com.flowboard.label.client.AuthServiceClient;
+import com.flowboard.label.client.BoardServiceClient;
+import com.flowboard.label.client.CardServiceClient;
 import com.flowboard.label.dto.*;
 import com.flowboard.label.entity.*;
 import com.flowboard.label.exception.ResourceNotFoundException;
@@ -7,14 +10,11 @@ import com.flowboard.label.exception.UnauthorizedException;
 import com.flowboard.label.mapper.LabelMapper;
 import com.flowboard.label.repository.*;
 import com.flowboard.label.service.LabelService;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestTemplate;
 import java.util.List;
 
 @Slf4j
@@ -25,76 +25,53 @@ public class LabelServiceImpl implements LabelService {
     private final CardLabelRepository cardLabelRepository;
     private final ChecklistRepository checklistRepository;
     private final ChecklistItemRepository checklistItemRepository;
-    private final RestTemplate restTemplate;
-
-    @Value("${auth.service.url}")
-    private String authServiceUrl;
-
-    @Value("${card.service.url}")
-    private String cardServiceUrl;
-
-    @Value("${board.service.url}")
-    private String boardServiceUrl;
+    private final AuthServiceClient authServiceClient;
+    private final CardServiceClient cardServiceClient;
+    private final BoardServiceClient boardServiceClient;
 
     // Internal helpers
     private Long resolveUserIdFromEmail(String email) {
-        String url = authServiceUrl + "/auth/internal/users/email/" + email;
         try {
-            UserResponseDTO user = restTemplate.getForObject(url, UserResponseDTO.class);
+            UserResponseDTO user = authServiceClient.getUserByEmail(email);
             if (user == null || user.getUserId() == null) {
                 throw new UnauthorizedException("Could not resolve user from Auth service");
             }
             return user.getUserId();
-        }
-        catch (UnauthorizedException e) {
+        } catch (UnauthorizedException e) {
             throw e;
-        }
-        catch (ResourceAccessException e) {
-            log.error("Auth service is DOWN: {}", e.getMessage());
-            throw new IllegalStateException("Auth service is currently unavailable.");
-        }
-        catch (HttpClientErrorException e) {
-            log.error("Auth service error for email {}: {}", email, e.getStatusCode());
+        } catch (FeignException.NotFound e) {
             throw new UnauthorizedException("User not found in Auth service");
-        }
-        catch (Exception e) {
+        } catch (FeignException e) {
+            log.error("Auth service call failed: {}", e.getMessage());
+            throw new IllegalStateException("Auth service is currently unavailable.");
+        } catch (Exception e) {
             log.error("Unexpected error calling Auth service: {}", e.getMessage());
             throw new IllegalStateException("Auth service error: " + e.getMessage());
         }
     }
 
     private void verifyBoardExists(Long boardId) {
-        // board-service internal endpoint to check board exists
-        String url = boardServiceUrl + "/boards/" + boardId;
         try {
-            restTemplate.getForObject(url, Object.class);
-        }
-        catch (HttpClientErrorException.NotFound e) {
+            boardServiceClient.getBoardById(boardId);
+        } catch (FeignException.NotFound e) {
             throw new ResourceNotFoundException("Board not found with id: " + boardId);
-        }
-        catch (ResourceAccessException e) {
-            log.error("Board service is DOWN: {}", e.getMessage());
+        } catch (FeignException e) {
+            log.error("Board service call failed: {}", e.getMessage());
             throw new IllegalStateException("Board service is currently unavailable.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("Board service call failed for boardId {}: {}", boardId, e.getMessage());
-            // Proceed — board may exist, connectivity issue
         }
     }
 
     private void verifyCardExists(Long cardId) {
-        String url = cardServiceUrl + "/cards/internal/" + cardId + "/exists";
         try {
-            restTemplate.getForObject(url, Object.class);
-        }
-        catch (HttpClientErrorException.NotFound e) {
+            cardServiceClient.getCardById(cardId);
+        } catch (FeignException.NotFound e) {
             throw new ResourceNotFoundException("Card not found with id: " + cardId);
-        }
-        catch (ResourceAccessException e) {
-            log.error("Card service is DOWN: {}", e.getMessage());
+        } catch (FeignException e) {
+            log.error("Card service call failed: {}", e.getMessage());
             throw new IllegalStateException("Card service is currently unavailable.");
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.warn("Card service call failed for cardId {}: {}", cardId, e.getMessage());
         }
     }
