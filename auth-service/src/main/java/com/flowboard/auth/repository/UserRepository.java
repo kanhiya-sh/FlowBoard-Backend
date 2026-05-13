@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
     List<User> findAllByRole(String role);
 
-    @Query("SELECT u FROM User u WHERE LOWER(u.fullName) LIKE LOWER(CONCAT('%', :name, '%'))")
-    List<User> searchByFullName(@Param("name") String name);
+    @Query("SELECT u FROM User u WHERE LOWER(u.fullName) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :q, '%')) " +
+           "OR LOWER(u.username) LIKE LOWER(CONCAT('%', :q, '%'))")
+    List<User> searchByFullName(@Param("q") String query);
 }

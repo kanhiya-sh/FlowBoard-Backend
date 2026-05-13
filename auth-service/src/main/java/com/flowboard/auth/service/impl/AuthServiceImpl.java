@@ -7,6 +7,9 @@ import com.flowboard.auth.repository.UserRepository;
 import com.flowboard.auth.service.AuthService;
 import com.flowboard.auth.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.List;
@@ -61,12 +64,17 @@ public class AuthServiceImpl implements AuthService {
                 token,
                 user.getUserId(),
                 user.getEmail(),
+                user.getFullName(),
+                user.getUsername(),
                 user.getRole(),
+                user.getAvatarUrl(),
+                user.isActive(),
                 "Login successful"
         );
     }
 
     @Override
+    @Cacheable(value = "users_by_email", key = "#email")
     public UserResponseDTO getUserByEmail(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -75,6 +83,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Cacheable(value = "users_by_id", key = "#userId")
     public UserResponseDTO getUserById(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -85,6 +94,11 @@ public class AuthServiceImpl implements AuthService {
     // ─── Profile Management ────────────────────────────────────────────────────
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "users_by_id", key = "#userId"),
+            @CacheEvict(value = "users_by_email", allEntries = true),
+            @CacheEvict(value = "users_by_username", allEntries = true)
+    })
     public UserResponseDTO updateProfile(Long userId, UpdateProfileRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -108,6 +122,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @CacheEvict(value = "users_by_id", key = "#userId")
     public void changePassword(Long userId, ChangePasswordRequest request) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -121,6 +136,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "users_by_id", key = "#userId"),
+            @CacheEvict(value = "users_by_email", allEntries = true),
+            @CacheEvict(value = "users_by_username", allEntries = true)
+    })
     public void deactivateAccount(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
@@ -144,6 +164,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Cacheable(value = "users_by_username", key = "#username")
     public UserResponseDTO getUserByUsername(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));

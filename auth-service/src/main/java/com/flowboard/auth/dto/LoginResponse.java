@@ -11,6 +11,10 @@ public class LoginResponse {
     private String token;
     private Long userId;
     private String email;
+    private String fullName;
+    private String username;
     private String role;
+    private String avatarUrl;
+    private boolean isActive;
     private String message;
 }
