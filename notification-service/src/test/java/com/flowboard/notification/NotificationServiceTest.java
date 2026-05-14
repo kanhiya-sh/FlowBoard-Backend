@@ -86,4 +86,124 @@ class NotificationServiceTest {
         long count = notificationService.getUnreadCount(1L);
         assertEquals(1L, count);
     }
+
+    @Test
+    void send_withInvalidType_defaultsToComment() {
+        NotificationRequestDTO req = new NotificationRequestDTO();
+        req.setRecipientId(1L);
+        req.setType("NONEXISTENT_TYPE");
+        req.setMessage("msg");
+        req.setTitle("title");
+
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        NotificationResponseDTO result = notificationService.send(req);
+        assertNotNull(result);
+        assertEquals(NotificationType.COMMENT.name(), result.getType());
+    }
+
+    @Test
+    void send_withLowercaseType_isParsedCorrectly() {
+        NotificationRequestDTO req = new NotificationRequestDTO();
+        req.setRecipientId(1L);
+        req.setType("assignment");
+        req.setMessage("msg");
+
+        when(notificationRepository.save(any(Notification.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        NotificationResponseDTO result = notificationService.send(req);
+        assertEquals(NotificationType.ASSIGNMENT.name(), result.getType());
+    }
+
+    @Test
+    void sendBulk_skipsRequestsWithNullRecipient() {
+        NotificationRequestDTO valid = new NotificationRequestDTO();
+        valid.setRecipientId(1L);
+        valid.setType("COMMENT");
+        valid.setMessage("ok");
+
+        NotificationRequestDTO invalid = new NotificationRequestDTO();
+        invalid.setRecipientId(null);
+        invalid.setType("COMMENT");
+        invalid.setMessage("skip");
+
+        when(notificationRepository.save(any(Notification.class))).thenReturn(testNotif);
+
+        List<NotificationResponseDTO> result =
+                notificationService.sendBulk(List.of(valid, invalid));
+
+        assertEquals(1, result.size());
+        verify(notificationRepository, times(1)).save(any(Notification.class));
+    }
+
+    @Test
+    void sendBulk_withEmptyList_returnsEmpty() {
+        List<NotificationResponseDTO> result = notificationService.sendBulk(List.of());
+        assertTrue(result.isEmpty());
+        verifyNoInteractions(notificationRepository);
+    }
+
+    @Test
+    void markAsRead_whenNotFound_throwsResourceNotFound() {
+        when(notificationRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(
+                com.flowboard.notification.exception.ResourceNotFoundException.class,
+                () -> notificationService.markAsRead(99L)
+        );
+        verify(notificationRepository, never()).save(any());
+    }
+
+    @Test
+    void markAllRead_marksAllUnreadAsRead() {
+        Notification n1 = Notification.builder().notificationId(1L).recipientId(1L).isRead(false).build();
+        Notification n2 = Notification.builder().notificationId(2L).recipientId(1L).isRead(false).build();
+        when(notificationRepository.findByRecipientIdAndIsReadOrderByCreatedAtDesc(1L, false))
+                .thenReturn(List.of(n1, n2));
+
+        notificationService.markAllRead(1L);
+
+        assertTrue(n1.getIsRead());
+        assertTrue(n2.getIsRead());
+        verify(notificationRepository).saveAll(List.of(n1, n2));
+    }
+
+    @Test
+    void markAllRead_whenNoUnread_savesEmptyList() {
+        when(notificationRepository.findByRecipientIdAndIsReadOrderByCreatedAtDesc(1L, false))
+                .thenReturn(List.of());
+
+        notificationService.markAllRead(1L);
+
+        verify(notificationRepository).saveAll(List.of());
+    }
+
+    @Test
+    void deleteRead_callsRepositoryWithCorrectArgs() {
+        notificationService.deleteRead(42L);
+        verify(notificationRepository).deleteByRecipientIdAndIsRead(42L, true);
+    }
+
+    @Test
+    void deleteNotification_whenNotFound_throwsResourceNotFound() {
+        when(notificationRepository.findById(404L)).thenReturn(Optional.empty());
+        assertThrows(
+                com.flowboard.notification.exception.ResourceNotFoundException.class,
+                () -> notificationService.deleteNotification(404L)
+        );
+        verify(notificationRepository, never()).delete(any());
+    }
+
+    @Test
+    void getAll_returnsAllMappedToResponseDTO() {
+        Notification n1 = Notification.builder().notificationId(1L).recipientId(1L)
+                .type(NotificationType.COMMENT).isRead(false).build();
+        Notification n2 = Notification.builder().notificationId(2L).recipientId(2L)
+                .type(NotificationType.ASSIGNMENT).isRead(true).build();
+        when(notificationRepository.findAll()).thenReturn(List.of(n1, n2));
+
+        List<NotificationResponseDTO> result = notificationService.getAll();
+        assertEquals(2, result.size());
+        assertEquals(1L, result.get(0).getNotificationId());
+        assertEquals(2L, result.get(1).getNotificationId());
+    }
 }
