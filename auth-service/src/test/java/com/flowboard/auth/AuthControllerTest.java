@@ -86,4 +86,70 @@ class AuthControllerTest {
         mockMvc.perform(get("/auth/internal/users/1"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void register_invalidBody_returns400() throws Exception {
+        RegisterRequest req = new RegisterRequest(); // all blank
+        mockMvc.perform(post("/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithMockUser
+    void getUserByEmail_returns200() throws Exception {
+        UserResponseDTO dto = UserResponseDTO.builder()
+                .userId(1L).email("test@test.com").username("testuser").build();
+        when(authService.getUserByEmail("test@test.com")).thenReturn(dto);
+
+        mockMvc.perform(get("/auth/internal/users/email/test@test.com"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value("test@test.com"));
+    }
+
+    @Test
+    @WithMockUser
+    void getUserByUsername_returns200() throws Exception {
+        UserResponseDTO dto = UserResponseDTO.builder()
+                .userId(1L).email("test@test.com").username("testuser").build();
+        when(authService.getUserByUsername("testuser")).thenReturn(dto);
+
+        mockMvc.perform(get("/auth/internal/users/username/testuser"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void updateProfile_returns200() throws Exception {
+        UpdateProfileRequest req = new UpdateProfileRequest();
+        req.setFullName("New Name");
+        UserResponseDTO dto = UserResponseDTO.builder().userId(1L).username("u").build();
+        when(authService.updateProfile(org.mockito.ArgumentMatchers.eq(1L), any())).thenReturn(dto);
+
+        mockMvc.perform(put("/auth/profile/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser
+    void changePassword_returns200() throws Exception {
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setCurrentPassword("old"); req.setNewPassword("new");
+
+        mockMvc.perform(put("/auth/password/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(req)))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Password changed successfully"));
+    }
+
+    @Test
+    @WithMockUser
+    void deactivateAccount_returns200() throws Exception {
+        mockMvc.perform(delete("/auth/deactivate/1"))
+                .andExpect(status().isOk());
+    }
 }

@@ -141,4 +141,136 @@ class AuthServiceTest {
         authService.changePassword(1L, req);
         verify(userRepository).save(any());
     }
+
+    // ─── login: user not found ────────────────────────────────────────────────
+
+    @Test
+    void login_userNotFound_throws() {
+        LoginRequest req = new LoginRequest();
+        req.setEmail("nope@e.com"); req.setPassword("x");
+        when(userRepository.findByEmail("nope@e.com")).thenReturn(Optional.empty());
+
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.login(req));
+    }
+
+    // ─── getUserByEmail / getUserByUsername / searchUsers ─────────────────────
+
+    @Test
+    void getUserByEmail_returnsDTO() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(testUser));
+        UserResponseDTO dto = authService.getUserByEmail("test@example.com");
+        assertEquals("testuser", dto.getUsername());
+    }
+
+    @Test
+    void getUserByEmail_notFound_throws() {
+        when(userRepository.findByEmail("x@y.com")).thenReturn(Optional.empty());
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.getUserByEmail("x@y.com"));
+    }
+
+    @Test
+    void getUserByUsername_returnsDTO() {
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        UserResponseDTO dto = authService.getUserByUsername("testuser");
+        assertEquals(1L, dto.getUserId());
+    }
+
+    @Test
+    void getUserByUsername_notFound_throws() {
+        when(userRepository.findByUsername("ghost")).thenReturn(Optional.empty());
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.getUserByUsername("ghost"));
+    }
+
+    @Test
+    void searchUsers_returnsList() {
+        when(userRepository.searchByFullName("test")).thenReturn(java.util.List.of(testUser));
+        var result = authService.searchUsers("test");
+        assertEquals(1, result.size());
+    }
+
+    // ─── updateProfile ────────────────────────────────────────────────────────
+
+    @Test
+    void updateProfile_success_changesAllFields() {
+        UpdateProfileRequest req = new UpdateProfileRequest();
+        req.setFullName("New Name"); req.setUsername("newname"); req.setAvatarUrl("/a.png");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsByUsername("newname")).thenReturn(false);
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO result = authService.updateProfile(1L, req);
+        assertEquals("newname", result.getUsername());
+    }
+
+    @Test
+    void updateProfile_blankFields_keepsOld() {
+        UpdateProfileRequest req = new UpdateProfileRequest();
+        req.setFullName(" "); req.setUsername(" "); // both blank → no-op
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO result = authService.updateProfile(1L, req);
+        assertEquals("testuser", result.getUsername());
+    }
+
+    @Test
+    void updateProfile_sameUsername_skipsUniqueCheck() {
+        UpdateProfileRequest req = new UpdateProfileRequest();
+        req.setUsername("testuser"); // same as current
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        UserResponseDTO result = authService.updateProfile(1L, req);
+        assertEquals("testuser", result.getUsername());
+        verify(userRepository, never()).existsByUsername(anyString());
+    }
+
+    @Test
+    void updateProfile_usernameTaken_throws() {
+        UpdateProfileRequest req = new UpdateProfileRequest();
+        req.setUsername("taken");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.existsByUsername("taken")).thenReturn(true);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authService.updateProfile(1L, req));
+    }
+
+    @Test
+    void updateProfile_userNotFound_throws() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.updateProfile(99L, new UpdateProfileRequest()));
+    }
+
+    // ─── changePassword ───────────────────────────────────────────────────────
+
+    @Test
+    void changePassword_wrongCurrent_throws() {
+        ChangePasswordRequest req = new ChangePasswordRequest();
+        req.setCurrentPassword("bad"); req.setNewPassword("x");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("bad", "encoded_pass")).thenReturn(false);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> authService.changePassword(1L, req));
+    }
+
+    @Test
+    void changePassword_userNotFound_throws() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.changePassword(99L, new ChangePasswordRequest()));
+    }
+
+    @Test
+    void deactivateAccount_userNotFound_throws() {
+        when(userRepository.findById(99L)).thenReturn(Optional.empty());
+        assertThrows(com.flowboard.auth.exception.ResourceNotFoundException.class,
+                () -> authService.deactivateAccount(99L));
+    }
 }
