@@ -8,6 +8,7 @@ import com.flowboard.notification.dto.NotificationRequestDTO;
 import com.flowboard.notification.dto.NotificationResponseDTO;
 import com.flowboard.notification.dto.UserResponseDTO;
 import com.flowboard.notification.service.NotificationService;
+import com.flowboard.notification.util.JwtUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,6 +34,7 @@ class NotificationControllerTest {
 
     @MockBean private NotificationService notificationService;
     @MockBean private AuthServiceClient authServiceClient;
+    @MockBean private JwtUtil jwtUtil;
 
     private UserResponseDTO mockUser(Long id) {
         UserResponseDTO u = new UserResponseDTO();
