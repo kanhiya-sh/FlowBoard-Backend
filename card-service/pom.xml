@@ -18,6 +18,20 @@
     <properties>
         <java.version>17</java.version>
         <spring-cloud.version>2023.0.1</spring-cloud.version>
+
+        <!-- SonarQube: exclude non-business-logic files from coverage metric.
+             These are Lombok POJOs, Spring config wiring, exception classes,
+             OAuth2 handlers, Feign clients, and the Spring Boot entry point. -->
+        <sonar.coverage.exclusions>
+            **/dto/**,
+            **/entity/**,
+            **/mapper/**,
+            **/config/**,
+            **/exception/**,
+            **/oauth2/**,
+            **/client/**,
+            **/*Application.java
+        </sonar.coverage.exclusions>
     </properties>
 
     <dependencies>
@@ -188,6 +202,8 @@
                         <exclude>**/mapper/**</exclude>
                         <exclude>**/config/**</exclude>
                         <exclude>**/exception/**</exclude>
+                        <exclude>**/oauth2/**</exclude>
+                        <exclude>**/client/**</exclude>
                         <exclude>**/*Application.class</exclude>
                     </excludes>
                 </configuration>
