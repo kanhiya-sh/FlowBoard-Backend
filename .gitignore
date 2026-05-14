@@ -1,0 +1,25 @@
+# ─── Secrets / Environment ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# ─── Docker / Compose runtime artifacts ────────────────────────
+build.log
+up.log
+up*.log
+*.log
+
+# ─── Maven build outputs (per-service .gitignore also covers) ──
+**/target/
+
+# ─── IDE / OS noise ────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ─── MySQL data dump (just in case) ────────────────────────────
+mysql-data/

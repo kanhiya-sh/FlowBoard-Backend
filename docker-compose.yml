@@ -1,0 +1,280 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  FlowBoard – full stack (10 microservices + MySQL + Redis + RabbitMQ)
+#  Same compose file works on:  laptop  AND  AWS EC2 t3.medium / t3.large.
+#  Memory budget (per service Xmx): tuned for ~5.5 GB total RAM usage.
+# ═══════════════════════════════════════════════════════════════════════════
+name: flowboard
+
+networks:
+  flowboard-net:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  rabbitmq-data:
+  redis-data:
+
+# ───────────────────────────────────────────────────────────────────────────
+# Reusable env block — every Spring service inherits this via x-anchor
+# ───────────────────────────────────────────────────────────────────────────
+x-spring-common: &spring-common
+  restart: unless-stopped
+  networks: [flowboard-net]
+  environment: &spring-common-env
+    # Eureka
+    EUREKA_URL: "http://eureka-server:8761/eureka/"
+    EUREKA_INSTANCE_PREFER_IP_ADDRESS: "false"
+    # DB
+    DB_USERNAME: "${DB_USERNAME:-flowboard}"
+    DB_PASSWORD: "${DB_PASSWORD:-flowboard123}"
+    # Redis
+    REDIS_HOST: "redis"
+    REDIS_PORT: "6379"
+    # RabbitMQ
+    RABBITMQ_HOST: "rabbitmq"
+    RABBITMQ_PORT: "5672"
+    RABBITMQ_USERNAME: "${RABBITMQ_USERNAME:-guest}"
+    RABBITMQ_PASSWORD: "${RABBITMQ_PASSWORD:-guest}"
+    # JWT — MUST be identical across all services
+    JWT_SECRET: "${JWT_SECRET:-mysecretkeymysecretkeymysecretkey}"
+    JWT_EXPIRATION: "${JWT_EXPIRATION:-86400000}"
+
+services:
+
+  # ═════════════════════════ INFRASTRUCTURE ═════════════════════════
+
+  mysql:
+    image: mysql:8.0
+    container_name: flowboard-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:-root}"
+      MYSQL_USER: "${DB_USERNAME:-flowboard}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:-flowboard123}"
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks: [flowboard-net]
+    command:
+      - --default-authentication-plugin=mysql_native_password
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+
+  redis:
+    image: redis:7-alpine
+    container_name: flowboard-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [flowboard-net]
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: flowboard-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USERNAME:-guest}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASSWORD:-guest}"
+    ports:
+      - "5672:5672"      # AMQP
+      - "15672:15672"    # Management UI
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 8
+      start_period: 120s
+    networks: [flowboard-net]
+
+  # ═════════════════════════ DISCOVERY ═════════════════════════════
+
+  eureka-server:
+    build: ./eureka-server
+    image: flowboard/eureka-server:latest
+    container_name: flowboard-eureka
+    restart: unless-stopped
+    ports:
+      - "8761:8761"
+    environment:
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx350m"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    networks: [flowboard-net]
+
+  # ═════════════════════════ BACKEND SERVICES ══════════════════════
+
+  auth-service:
+    <<: *spring-common
+    build: ./auth-service
+    image: flowboard/auth-service:latest
+    container_name: flowboard-auth
+    ports:
+      - "8081:8081"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "auth-service"
+      DB_AUTH_URL: "jdbc:mysql://mysql:3306/flowboard_auth?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+      GOOGLE_CLIENT_ID: "${GOOGLE_CLIENT_ID:-}"
+      GOOGLE_CLIENT_SECRET: "${GOOGLE_CLIENT_SECRET:-}"
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  workspace-service:
+    <<: *spring-common
+    build: ./workspace-service
+    image: flowboard/workspace-service:latest
+    container_name: flowboard-workspace
+    ports:
+      - "8082:8082"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "workspace-service"
+      DB_WORKSPACE_URL: "jdbc:mysql://mysql:3306/flowboard_workspace?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql:    { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  board-service:
+    <<: *spring-common
+    build: ./board-service
+    image: flowboard/board-service:latest
+    container_name: flowboard-board
+    ports:
+      - "8083:8083"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "board-service"
+      DB_BOARD_URL: "jdbc:mysql://mysql:3306/flowboard_board?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  list-service:
+    <<: *spring-common
+    build: ./list-service
+    image: flowboard/list-service:latest
+    container_name: flowboard-list
+    ports:
+      - "8084:8084"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "list-service"
+      DB_LIST_URL: "jdbc:mysql://mysql:3306/flowboard_list?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  card-service:
+    <<: *spring-common
+    build: ./card-service
+    image: flowboard/card-service:latest
+    container_name: flowboard-card
+    ports:
+      - "8085:8085"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "card-service"
+      DB_CARD_URL: "jdbc:mysql://mysql:3306/flowboard_card?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql:    { condition: service_healthy }
+      redis:    { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  comment-service:
+    <<: *spring-common
+    build: ./comment-service
+    image: flowboard/comment-service:latest
+    container_name: flowboard-comment
+    ports:
+      - "8086:8086"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "comment-service"
+      DB_COMMENT_URL: "jdbc:mysql://mysql:3306/flowboard_comment?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql:    { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  label-service:
+    <<: *spring-common
+    build: ./label-service
+    image: flowboard/label-service:latest
+    container_name: flowboard-label
+    ports:
+      - "8087:8087"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "label-service"
+      DB_LABEL_URL: "jdbc:mysql://mysql:3306/flowboard_label?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  notification-service:
+    <<: *spring-common
+    build: ./notification-service
+    image: flowboard/notification-service:latest
+    container_name: flowboard-notification
+    ports:
+      - "8088:8088"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx400m"
+      EUREKA_INSTANCE_HOSTNAME: "notification-service"
+      DB_NOTIFICATION_URL: "jdbc:mysql://mysql:3306/flowboard_notification?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true"
+    depends_on:
+      mysql:    { condition: service_healthy }
+      rabbitmq: { condition: service_healthy }
+      eureka-server: { condition: service_healthy }
+
+  # ═════════════════════════ EDGE ═════════════════════════════════
+
+  api-gateway:
+    <<: *spring-common
+    build: ./api-gateway
+    image: flowboard/api-gateway:latest
+    container_name: flowboard-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      <<: *spring-common-env
+      JAVA_TOOL_OPTIONS: "-Xms128m -Xmx350m"
+      EUREKA_INSTANCE_HOSTNAME: "api-gateway"
+    depends_on:
+      eureka-server: { condition: service_healthy }
