@@ -1,0 +1,62 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # Allow manual trigger from Actions tab
+
+concurrency:
+  group: deploy-ec2
+  cancel-in-progress: false  # Don't cancel a running deploy mid-build
+
+jobs:
+  deploy:
+    name: SSH deploy to EC2
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Trigger deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          # Don't fail on first connection (skip host key check)
+          script_stop: true
+          command_timeout: 25m
+          script: |
+            set -e
+            echo "==> Starting deploy at $(date)"
+            cd ~/flowboard
+
+            echo "==> Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+            git log -1 --oneline
+
+            echo "==> Building & restarting containers..."
+            docker compose up -d --build --remove-orphans
+
+            echo "==> Waiting 60s for containers to settle..."
+            sleep 60
+
+            echo "==> Final status:"
+            docker compose ps --format "table {{.Service}}\t{{.Status}}"
+
+            echo "==> Deploy complete at $(date)"
+
+      - name: Verify Eureka registration
+        run: |
+          echo "Waiting 30s for app warm-up..."
+          sleep 30
+          REGISTERED=$(curl -s -m 10 "http://${{ secrets.EC2_HOST }}:8761/eureka/apps" \
+            -H "Accept: application/json" \
+            | grep -oP '"name":"\K[^"]+' | sort -u | wc -l)
+          echo "Registered apps: $REGISTERED"
+          if [ "$REGISTERED" -lt 9 ]; then
+            echo "::warning::Only $REGISTERED apps registered, expected at least 9. Services may still be starting."
+          else
+            echo "All apps registered!"
+          fi
